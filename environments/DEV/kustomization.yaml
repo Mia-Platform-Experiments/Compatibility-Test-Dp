@@ -2,23 +2,3 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../configuration
-  - api-gateway-envoy-config.configmap.yml
-  - config.configmap.yml
-  - tools.configmap.yml
-  - hub-fe-configuration.configmap.yml
-  - crud-service-collections.configmap.yml
-  - api-gateway.deployment.yml
-  - api-gateway.service.yml
-  - agent-be.deployment.yml
-  - agent-be.service.yml
-  - agent-bff.deployment.yml
-  - agent-bff.service.yml
-  - agent-fe.deployment.yml
-  - agent-fe.service.yml
-  - crud-service.deployment.yml
-  - crud-service.service.yml
-  - api-gateway.serviceaccount.yml
-  - agent-be.serviceaccount.yml
-  - agent-bff.serviceaccount.yml
-  - agent-fe.serviceaccount.yml
-  - crud-service.serviceaccount.yml
