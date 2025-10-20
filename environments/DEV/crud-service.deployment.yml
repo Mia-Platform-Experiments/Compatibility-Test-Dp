@@ -80,7 +80,7 @@ spec:
             - name: TRUSTED_PROXIES
               value: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
             - name: CRUD_LIMIT_CONSTRAINT_ENABLED
-              value: 'TRUE'
+              value: 'true'
             - name: EXPOSE_METRICS
               value: 'false'
             - name: MONGODB_URL
