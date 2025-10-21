@@ -39,6 +39,7 @@ jobs:
           NEXUS_USER: ${{ secrets.NEXUS_USER }}
           NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
           NEXUS_URL: ${{ secrets.NEXUS_URL }}
+          KAFKA_BROKERS: ${{ secrets.KAFKA_BROKERS }}
         run: |
           export RELEASE_DATE="$(date -I'seconds' -u)"
           tee /tmp/ca.pem > /dev/null << EOF
