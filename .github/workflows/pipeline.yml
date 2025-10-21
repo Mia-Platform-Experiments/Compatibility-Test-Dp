@@ -40,6 +40,8 @@ jobs:
           NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
           NEXUS_URL: ${{ secrets.NEXUS_URL }}
           KAFKA_BROKERS: ${{ secrets.KAFKA_BROKERS }}
+          KAFKA_SASL_PASSWORD: ${{ secrets.KAFKA_SASL_PASSWORD }}
+          KAFKA_SASL_USERNAME: ${{ secrets.KAFKA_SASL_USERNAME }}
         run: |
           export RELEASE_DATE="$(date -I'seconds' -u)"
           tee /tmp/ca.pem > /dev/null << EOF

@@ -6,3 +6,16 @@ secrets:
       password: "{{NEXUS_TOKEN}}"
       email: "operations@mia-platform.eu"
       server: "{{NEXUS_URL}}"
+  - name: "kafka"
+    when: "always"
+    data:
+      - from: "literal"
+        key: "bootstrap.servers"
+        value: "{{KAFKA_BROKERS}}"
+      - from: "literal"
+        key: "sasl.username"
+        value: "{{KAFKA_SASL_USERNAME}}"
+      - from: "literal"
+        key: "sasl.password"
+        value: "{{KAFKA_SASL_PASSWORD}}"
+
