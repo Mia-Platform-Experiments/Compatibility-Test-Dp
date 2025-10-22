@@ -8,10 +8,33 @@ jobs:
     permissions:
       deployments: write
       contents: read
+      id-token: write # Aggiunto: Necessario per l'autenticazione OIDC
     runs-on: ubuntu-latest
     container: miaplatform/mlp:2.1.0
     steps:
       - uses: actions/checkout@v4
+
+      # --- Aggiunto: Autenticazione con AWS tramite OIDC ---
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # SOSTITUISCI con l'ARN del Ruolo IAM che hai creato per GitHub Actions
+          role-to-assume: arn:aws:iam::905418444414:role/github-actions-secrets-manager-role
+          # SOSTITUISCI con la tua Regione AWS
+          aws-region: eu-west-1 
+
+      # --- Aggiunto: Recupero dei Secrets da AWS Secrets Manager ---
+      - name: Retrieve Secrets from AWS Secrets Manager
+        id: secrets_manager # Assegna un ID per accedere agli output
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          # Inserisci gli ID dei tuoi secret, separati da spazi o newline.
+          # Imposta 'parse-json-secrets: true' se i tuoi secret sono JSON, altrimenti puoi ometterlo.
+          # Se i secrets sono JSON, l'Action creerà variabili d'ambiente come SECRET_ID_KEYNAME.
+          secret-ids: |
+            mongodb/credentials
+          parse-json-secrets: true 
+
       - name: Update deployment status (pending)
         if: success()
         uses: chrnorm/deployment-status@v2
@@ -19,6 +42,7 @@ jobs:
           token: '${{ github.token }}'
           state: 'pending'
           deployment-id: ${{ github.event.deployment.id }}
+          
       - name: Deploy my app
         env:
           GIT_DEPTH: 1
@@ -33,16 +57,27 @@ jobs:
           DEPLOY_TYPE: ${{ github.event.deployment.payload.variables.DEPLOY_TYPE }}
           FORCE_DEPLOY_WHEN_NO_SEMVER: ${{ github.event.deployment.payload.variables.FORCE_DEPLOY_WHEN_NO_SEMVER }}
           KUBE_NAMESPACE: ${{ github.event.deployment.payload.variables.KUBE_NAMESPACE }}
-          KUBE_URL: ${{ secrets.KUBE_URL }}
-          KUBE_CA_PEM: ${{ secrets.KUBE_CA_PEM }}
-          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
-          NEXUS_USER: ${{ secrets.NEXUS_USER }}
-          NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
-          NEXUS_URL: ${{ secrets.NEXUS_URL }}
-          KAFKA_BROKERS: ${{ secrets.KAFKA_BROKERS }}
-          KAFKA_SASL_PASSWORD: ${{ secrets.KAFKA_SASL_PASSWORD }}
-          KAFKA_SASL_USERNAME: ${{ secrets.KAFKA_SASL_USERNAME }}
+          
+          # --- Aggiornato: Uso dei valori da Secrets Manager ---
+          # Assumendo che il secret 'kubernetes/credentials' contenga le chiavi 'KUBE_URL', 'KUBE_CA_PEM', 'KUBE_TOKEN'
+          KUBE_URL: ${{ env.KUBERNETES_CREDENTIALS_KUBE_URL }}
+          KUBE_CA_PEM: ${{ env.KUBERNETES_CREDENTIALS_KUBE_CA_PEM }}
+          KUBE_TOKEN: ${{ env.KUBERNETES_CREDENTIALS_KUBE_TOKEN }}
+          
+          # Assumendo che il secret 'nexus/credentials' contenga le chiavi 'USER', 'TOKEN', 'URL'
+          NEXUS_USER: ${{ env.NEXUS_CREDENTIALS_USER }}
+          NEXUS_TOKEN: ${{ env.NEXUS_CREDENTIALS_TOKEN }}
+          NEXUS_URL: ${{ env.NEXUS_CREDENTIALS_URL }}
+          
+          # Assumendo che il secret 'kafka/credentials' contenga le chiavi 'BROKERS', 'SASL_PASSWORD', 'SASL_USERNAME'
+          KAFKA_BROKERS: ${{ env.KAFKA_CREDENTIALS_BROKERS }}
+          KAFKA_SASL_PASSWORD: ${{ env.KAFKA_CREDENTIALS_SASL_PASSWORD }}
+          KAFKA_SASL_USERNAME: ${{ env.KAFKA_CREDENTIALS_SASL_USERNAME }}
+          # ---------------------------------------------------
+          MONGODB_URL: ${{ env.MONGODB_CREDENTIALS_MONGODB_URL }}
+          
         run: |
+          # Il tuo script RUN resta invariato, dato che i secrets sono ora variabili d'ambiente
           export RELEASE_DATE="$(date -I'seconds' -u)"
           tee /tmp/ca.pem > /dev/null << EOF
           ${KUBE_CA_PEM}
@@ -55,6 +90,7 @@ jobs:
           mlp interpolate -e "${ENVIRONMENT_PREFIX}" -e "${ENVIRONMENT_VARIABLES_PREFIX}" -f "${OVERLAY_PATH}" -o "${OVERLAY_PATH}"
           mlp kustomize "${OVERLAY_PATH}" -o "${DESTINATION_PATH}/kustomize-output.yaml"
           mlp deploy --ensure-namespace=false --server "${KUBE_URL}" --certificate-authority "/tmp/ca.pem" --token "${KUBE_TOKEN}" --deploy-type "${DEPLOY_TYPE}" --force-deploy-when-no-semver="${FORCE_DEPLOY_WHEN_NO_SEMVER}" -f "${DESTINATION_PATH}/kustomize-output.yaml" -n "${KUBE_NAMESPACE}"
+          
       - name: Update deployment status (success)
         if: success()
         uses: chrnorm/deployment-status@v2
@@ -62,6 +98,7 @@ jobs:
           token: '${{ github.token }}'
           state: 'success'
           deployment-id: ${{ github.event.deployment.id }}
+          
       - name: Update deployment status (failure)
         if: failure()
         uses: chrnorm/deployment-status@v2
