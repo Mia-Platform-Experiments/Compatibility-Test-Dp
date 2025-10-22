@@ -78,6 +78,7 @@ jobs:
           
         run: |
           # Il tuo script RUN resta invariato, dato che i secrets sono ora variabili d'ambiente
+          echo "${MONGODB_URL}"
           export RELEASE_DATE="$(date -I'seconds' -u)"
           tee /tmp/ca.pem > /dev/null << EOF
           ${KUBE_CA_PEM}
