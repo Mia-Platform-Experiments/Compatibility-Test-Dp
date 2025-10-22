@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  get_weather_example.py: |
+    def get_weather(city: str) -> dict:
+        """Retrieves the current weather report for a specified city.
+
+        Returns:
+            dict: A dictionary containing the weather information with a 'status' key ('success' or 'error') and a 'report' key with the weather details if successful, or an 'error_message' if an error occurred.
+        """
+        if city.lower() == "new york":
+            return {"status": "success",
+                    "report": "The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}
+        else:
+            return {"status": "error",
+                    "error_message": f"Weather information for '{city}' is not available."}
+kind: ConfigMap
+metadata:
+  name: tools
+  labels:
+    app.kubernetes.io/part-of: compatibility-test-dp
+    app.kubernetes.io/managed-by: mia-platform
+    mia-platform.eu/stage: DEV
+    mia-platform.eu/tenant: b933f1ef-5b8e-4adf-a346-24a3b03d13e8

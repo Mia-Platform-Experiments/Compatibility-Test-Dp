@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-be
+  annotations:
+    mia-platform.eu/version: 14.3.1
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+    fluentbit.io/parser: pino
+  labels:
+    app: agent-be
+    app.kubernetes.io/name: agent-be
+    app.kubernetes.io/version: 1.0.2
+    app.kubernetes.io/component: custom
+    app.kubernetes.io/part-of: compatibility-test-dp
+    app.kubernetes.io/managed-by: mia-platform
+    mia-platform.eu/stage: DEV
+    mia-platform.eu/tenant: b933f1ef-5b8e-4adf-a346-24a3b03d13e8
+    mia-platform.eu/log-type: mia-json
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-be
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      annotations:
+        apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+        apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+        fluentbit.io/parser: pino
+      labels:
+        app: agent-be
+        app.kubernetes.io/name: agent-be
+        app.kubernetes.io/version: 1.0.2
+        app.kubernetes.io/component: custom
+        app.kubernetes.io/part-of: compatibility-test-dp
+        app.kubernetes.io/managed-by: mia-platform
+        mia-platform.eu/stage: DEV
+        mia-platform.eu/tenant: b933f1ef-5b8e-4adf-a346-24a3b03d13e8
+        mia-platform.eu/log-type: mia-json
+    spec:
+      imagePullSecrets:
+        - name: nexus-gcloud
+        - name: orca-ghcr
+        - name: orca-google-registry
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: agent-be
+      containers:
+        - name: agent-be
+          image: nexus.mia-platform.eu/hub/hub-be:1.0.2
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 800Mi
+              cpu: 1000m
+            requests:
+              memory: 400Mi
+              cpu: 250m
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: tools
+              mountPath: /app/agents/hub/tools/get_weather_example.py
+              readOnly: true
+              subPath: get_weather_example.py
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          args: []
+          env:
+            - name: LOG_LEVEL
+              value: 'info'
+            - name: OPENAI_API_KEY
+              value: '{{OPENAI_API_KEY}}'
+            - name: ROOT_AGENT_NAME
+              value: openai_gpt_4o
+            - name: IN_MEMORY_SESSION_SERVICE
+              value: 'TRUE'
+            - name: MONGODB_CONNECTION_STRING
+              value: ''
+            - name: MONGODB_DATABASE_NAME
+              value: ''
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+            httpGet:
+              port: http
+              path: /-/ready
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 1
+            failureThreshold: 3
+            httpGet:
+              port: http
+              path: /-/healthz
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+      volumes:
+        - name: config
+          configMap:
+            name: config
+        - name: tools
+          configMap:
+            name: tools
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
