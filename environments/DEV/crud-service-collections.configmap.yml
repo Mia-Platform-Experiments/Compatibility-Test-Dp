@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  conversations-conversations.json: '{"id":"conversations","description":"Collection of conversations","name":"conversations","fields":[{"name":"_id","type":"ObjectId","required":true,"nullable":false,"description":"_id"},{"name":"creatorId","type":"string","required":true,"nullable":false,"description":"creatorId"},{"name":"createdAt","type":"Date","required":true,"nullable":false,"description":"createdAt"},{"name":"updaterId","type":"string","required":true,"nullable":false,"description":"updaterId"},{"name":"updatedAt","type":"Date","required":true,"nullable":false,"description":"updatedAt"},{"name":"__STATE__","type":"string","required":true,"nullable":false,"description":"__STATE__"},{"name":"conversationName","type":"string","required":true,"nullable":false,"description":""},{"name":"status","type":"string","required":true,"nullable":false,"description":""},{"name":"messages","type":"Array","required":false,"nullable":false,"description":"","items":{"type":"RawObject"}},{"name":"sessionId","type":"string","required":true,"nullable":false,"description":"Identifier of the Google ADK sessionId."}],"endpointBasePath":"/conversations","defaultState":"PUBLIC","indexes":[{"name":"_id","type":"normal","unique":true,"fields":[{"name":"_id","order":1}]},{"name":"createdAt","type":"normal","unique":false,"fields":[{"name":"createdAt","order":-1}]},{"name":"stateIndex","type":"normal","unique":false,"fields":[{"name":"__STATE__","order":1}]}],"tags":["collection"]}'
+kind: ConfigMap
+metadata:
+  name: crud-service-collections
+  labels:
+    app.kubernetes.io/part-of: compatibility-test-dp
+    app.kubernetes.io/managed-by: mia-platform
+    mia-platform.eu/stage: DEV
+    mia-platform.eu/tenant: b933f1ef-5b8e-4adf-a346-24a3b03d13e8
